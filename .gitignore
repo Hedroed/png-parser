@@ -1,0 +1,11 @@
+*.pyc
+__pycache__/
+.mypy_cache/
+.vscode/
+
+dist/
+build/
+*.egg-info/
+
+.tox/
+.coverage
