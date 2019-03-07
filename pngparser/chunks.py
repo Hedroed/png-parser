@@ -1,7 +1,6 @@
 import zlib
 
 from .chunktypes import ChunkField, ChunkTypes
-# from .crc32 import CRC
 from .chunkdata import ChunkData
 
 class Chunk:
@@ -9,7 +8,6 @@ class Chunk:
     @staticmethod
     def parse(type_byte: bytes, data_byte: bytes, crc_byte: bytes):
         type_ = ChunkTypes.from_binary(type_byte)
-        # crc = CRC(crc_byte)
         data = ChunkData.get_chunk_data(type_, data_byte)
 
         return Chunk(type_, data, crc_byte)
@@ -22,11 +20,16 @@ class Chunk:
         self.data = data
         self.crc = crc
 
+    def compute_crc(self):
+        _type = self.type.to_bytes()
+        raw = self.data.data
+        return zlib.crc32(_type + raw).to_bytes(ChunkField.CRC.length(), 'big')
+
     def to_bytes(self):
         _type = self.type.to_bytes()
         raw = self.data.data
 
-        crc = zlib.crc32(_type + raw).to_bytes(ChunkField.CRC.length(), 'big')
+        crc = self.compute_crc()
         l = len(raw).to_bytes(ChunkField.DATA_LENGTH.length(), 'big')
 
         return l + _type + raw + crc
