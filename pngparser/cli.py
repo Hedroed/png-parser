@@ -70,15 +70,19 @@ def print_chunk(chunk, idx, data=False, crc=False, length=False, hexa=False):
     print('{}{}{}:'.format(Color.chunk, chunk.type, Color.r))
 
     if crc:
-        print('{}CRC : {}{}'.format(Color.crc, repr(chunk.crc), Color.r))
+        current = chunk.crc
+        computed = chunk.compute_crc()
+        if current == computed:
+            print('{}CRC : {}{}'.format(Color.crc, computed.hex(), Color.r))
+        else:
+            print('{}CRC : {} : Incorrect must be {}{}'.format(Color.crc, current.hex(), computed.hex(), Color.r))
     if length:
         print('{}Length : {}{}'.format(Color.length, chunk.length,
                                        Color.r))
 
+    print('{}Data size : {}{}'.format(Color.length, len(chunk.data), Color.r))
     if data:
         print(str(chunk.data))
-    else:
-        print('{}Data size : {}{}'.format(Color.length, len(chunk.data), Color.r))
 
     print()
 
@@ -109,6 +113,10 @@ def args_parser():
                         action='store_true')
     parser.add_argument('-s', '--show', help='Show image',
                         action='store_true')
+
+    # Save file
+    parser.add_argument('--output', help='Save image (fixe current file error)',
+                        type=str, default='')
 
     # Debug
     parser.add_argument('-v', '--verbose',
@@ -146,6 +154,13 @@ def main():
 
         for idx, chunk in enumerate(chunks):
             print_chunk(chunk, idx, args.data, args.crc, args.length, args.hex)
+
+        if args.show:
+            png.show_image()
+
+        if args.output:
+            name = args.output
+            png.save_file(name)
 
     if args.show:
         flush_input()
