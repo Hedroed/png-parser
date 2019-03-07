@@ -2,14 +2,52 @@
 
 import argparse
 import os
+import os.path
 import sys
 import logging
+import random
 
 from .color import Color
 from .utils import monitor_results, flush_input
 from .chunktypes import ChunkTypes
 from .png import PngParser
+from .version import __version__
 
+
+def show_banner():
+    colors = [
+        "\033[0m",
+        "\033[31m",
+        "\033[32m",
+        "\033[33m",
+        "\033[34m",
+        "\033[35m",
+        "\033[36m"
+    ]
+
+    def colorize(letter):
+        if letter == " " or letter == "\n":
+            return letter
+        c = random.choice(colors)
+        return "%s%s\033[0m" % (c, letter)
+
+    raw_banner="""
+ ▄▄▄· ▐ ▄  ▄▄ •  ▄▄▄· ▄▄▄· ▄▄▄  .▄▄ · ▄▄▄ .▄▄▄  
+▐█ ▄█•█▌▐█▐█ ▀ ▪▐█ ▄█▐█ ▀█ ▀▄ █·▐█ ▀. ▀▄.▀·▀▄ █·
+ ██▀·▐█▐▐▌▄█ ▀█▄ ██▀·▄█▀▀█ ▐▀▀▄ ▄▀▀▀█▄▐▀▀▪▄▐▀▀▄ 
+▐█▪·•██▐█▌▐█▄▪▐█▐█▪·•▐█ ▪▐▌▐█•█▌▐█▄▪▐█▐█▄▄▌▐█•█▌
+.▀   ▀▀ █▪·▀▀▀▀ .▀    ▀  ▀ .▀  ▀ ▀▀▀▀  ▀▀▀ .▀  ▀
+"""
+    banner = "".join(colorize(l) for l in raw_banner)
+
+    version = "\033[1mv%s\033[0m" % __version__
+
+    final = "%s\n%s\n"
+    print(final % (banner, version))
+
+def show_meta(filename):
+    meta = "\033[1;33mFilename: \033[34m%s \033[35m| \033[33mSize: \033[34m%s\033[0m" % (os.path.basename(filename), os.stat(filename).st_size)
+    print("%s\n" % meta)
 
 def print_error_and_exit(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -79,11 +117,13 @@ def args_parser():
     return parser.parse_args()
 
 def main():
+    show_banner()
     args = args_parser()
 
     filename = args.file
     if not os.path.isfile(filename):
-        print_error_and_exit('"{}" file not found!'.format(filename))
+        print_error_and_exit('Error: file not found %s' % filename)
+    show_meta(filename)
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
