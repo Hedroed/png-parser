@@ -2,16 +2,22 @@
 Parser PNG
 """
 from setuptools import find_packages, setup
+from distutils.util import convert_path
+
+main_ns = {}
+ver_path = convert_path('pngparser/version.py')
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), main_ns)
 
 dependencies = []
 
 setup(
     name='png-parser',
-    version='1.0.0',
+    version=main_ns['__version__'],
     url='https://github.com/hedroed/png-parser',
     license='BSD',
     author='Hedroed',
-    author_email='vincent@3rdcloud.com',
+    author_email='contact@nathanryd.in',
     description='Parser PNG',
     long_description=__doc__,
     packages=find_packages(exclude=['tests']),
