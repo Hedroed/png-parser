@@ -1,5 +1,6 @@
 from PIL import Image
 import struct
+import zlib
 from datetime import datetime
 
 from .chunktypes import ChunkTypes
@@ -17,6 +18,12 @@ class ChunkData:
 
         elif chunk_type == ChunkTypes.PLTE:
             return ChunkDataPLTE(data)
+        
+        elif chunk_type == ChunkTypes.IDAT:
+            return ChunkDataRaw(data)
+
+        elif chunk_type == ChunkTypes.IEND:
+            return ChunkDataRaw(data)
 
         elif chunk_type == ChunkTypes.tIME:
             return ChunkDataTime(data)
@@ -84,11 +91,9 @@ class ChunkPhysical(ChunkData):
 class ChunkBackground(ChunkData):
     def __init__(self, data):
         self.data = data
-
         # TODO
 
-
-class ChunkDataIDAT(ChunkData):
+class ChunkDataRaw(ChunkData):
     def __init__(self, data):
         self.data = data
 
