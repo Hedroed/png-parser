@@ -1,27 +1,41 @@
 # png-parser
 
-Parser PNG
+Best tool to analyse PNG file, it show you png chunks : header, palette and text.
+
+
+![demo](public/screen1.png)
+
+![demo text](public/screen2.png)
 
 
 ## Installation
 
 Simply run:
 
-    $ pip setup.py install
-
+```sh
+python setup.py install
+```
 
 ## Usage
 
 To use it:
 
-    $ png-parser --help
+```sh
+png-parser --help
+```
 
 ## Dev
 
 ### Run example
 
 ```
-PYTHONPATH=$PYTHONPATH:$(pwd) python example/read_png_filters.py
+python example/read_png_filters.py
+```
+
+### Install for development
+
+```sh
+python setup.py develop
 ```
 
 
