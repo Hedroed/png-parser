@@ -13,9 +13,6 @@ class ChunkData:
         if chunk_type == ChunkTypes.IHDR:
             return ChunkDataIHDR(data)
 
-        elif ChunkTypes.is_text_chunk(chunk_type):
-            return ChunkDataText(data)
-
         elif chunk_type == ChunkTypes.PLTE:
             return ChunkDataPLTE(data)
         
@@ -24,6 +21,15 @@ class ChunkData:
 
         elif chunk_type == ChunkTypes.IEND:
             return ChunkDataRaw(data)
+
+        elif chunk_type == ChunkTypes.tEXt:
+            return ChunkDataText(data)
+
+        elif chunk_type == ChunkTypes.iTXt:
+            return ChunkDataText(data)
+
+        elif chunk_type == ChunkTypes.zTXt:
+            return ChunkDataZText(data)
 
         elif chunk_type == ChunkTypes.tIME:
             return ChunkDataTime(data)
@@ -54,6 +60,28 @@ class ChunkDataText(ChunkData):
         
     def __str__(self):
         return "%s%s%s" % (Color.text, self.text, Color.r)
+
+class ChunkDataZText(ChunkData):
+    def __init__(self, data):
+        self.data = data
+
+        d = data.split(b'\x00', maxsplit=1)
+        
+        self.key = d[0].decode('utf-8')
+        rest = d[1]
+        self.method = rest[0]
+        self.text = zlib.decompress(rest[1:]).decode('utf-8')
+
+
+    def __repr__(self):
+        return "ChunkDataZText(%s)" % self.data
+        
+    def __str__(self):
+        ret  = "%sKey : %s%s\n" % (Color.text, Color.data, self.key)
+        ret += "%sText : %s%s\n" % (Color.text, Color.data, self.text)
+        ret += "%sMethod : %s%s\n" % (Color.text, Color.data, self.method)
+        
+        return "%s%s" % (ret, Color.r)
 
 
 class ChunkDataTime(ChunkData):
