@@ -5,6 +5,8 @@ from .pixel import Pixel
 class ImageData():
     def __init__(self, header, scanlines, palette=None):
         self.header = header
+        self.raw_data = b''.join(line[1:] for line in scanlines)
+        self.scanlines = scanlines
         
         if palette:
             color_type = self.header.color_type
@@ -22,6 +24,8 @@ class ImageData():
             self.rows.append(image_row)
 
     def show(self):
+        for row in self.rows:
+            row.computePixels()
         self.image.show()
 
     def save_to_bytes(self):
@@ -88,7 +92,7 @@ class ImageDataRow():
         self.image = image
 
     def update_filter(self, new_filter:int):
-        self._computePixels()
+        self.computePixels()
 
         if self.filter == new_filter:
             return
@@ -102,7 +106,7 @@ class ImageDataRow():
         self.pixels = new_pixels
 
 
-    def _computePixels(self):
+    def computePixels(self):
         for x, px in enumerate(self.pixels):
             pixel = self._getpixelfilter(x, self.y, px, self.image)
             self.image.putpixel((x, self.y), pixel)

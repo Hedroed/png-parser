@@ -95,68 +95,11 @@ class PngParser():
         img = self.get_image_data()
         img.show()
 
-
-        # header = png.getHeader().data
-        # if header:
-        #     print("%sCreating image !!!%s" % (Color.text, Color.r))
-
-        #     iType, pxLen = self.getImageType(header)
-
-        #     data = self.loadIDAT(header, png.getData(), pxLen)
-
-        #     h = header.height
-        #     if data:
-        #         h = len(data)
-
-        #     image = Image.new(iType, (header.width, h))
-
-        #     print('%sSize: %sx%s%s' %
-        #           (Color.text, header.width, h, Color.r))
-        #     loader = Loader(max=h)
-        #     loader.draw()
-
-        #     for y in range(h):
-        #         loader.increase()
-        #         loader.draw()
-
-        #         pixels = []
-        #         row = data[y]
-        #         filterValue = row[0]
-
-        #         if png.hasPalette():
-        #             palette = png.getPalette().data
-        #             pixels = [palette.palette[row[i]]
-        #                       for i in range(1, len(row))]
-        #         else:
-        #             px = []
-        #             for val in BitArray(row[1:], header.bit_depth):
-        #                 if header.bit_depth != 8:
-        #                     val = val * (2**header.bit_depth - 1)
-        #                 px.append(val)
-        #                 if len(px) == pxLen:
-        #                     pixels.append(tuple(px))
-        #                     px = []
-
-        #         for x, px in enumerate(pixels):
-        #             pixel = Pixel(header.color_type, px)
-        #             pixel = self.getpixelfilter(filterValue,
-        #                                         x, y,
-        #                                         pixel,
-        #                                         image,
-        #                                         header.color_type)
-        #             image.putpixel((x, y), pixel.getTuple())
-
-        #     image.show()
-        #     print()
-        # else:
-        #     print("%sCan't create image 'No header'%s" %
-        #           (Color.unknown, Color.r))
-
     def get_header(self):
         header_chunk = next(c for c in self.chunks if c.type == ChunkTypes.IHDR)
         return header_chunk.data
 
-    def get_image_data(self):
+    def get_image_data(self) -> ImageData:
         idats = [ c for c in self.chunks if c.type == ChunkTypes.IDAT]
         header_chunk = next(c for c in self.chunks if c.type == ChunkTypes.IHDR)
 

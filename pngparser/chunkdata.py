@@ -230,4 +230,4 @@ class ChunkDataPLTE(ChunkData):
 
         image.show()
 
-        return "%s%s" % (ret, Color.r)
+        return "%s%s%s" % (ret, self.data, Color.r)

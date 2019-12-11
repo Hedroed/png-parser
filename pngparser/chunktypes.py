@@ -16,6 +16,10 @@ class ChunkUnknown:
     def __str__(self):
         return 'Unknown [ %s ]' % self.name
 
+    def to_bytes(self):
+        return self.name.encode()
+
+
     def __eq__(self, other):
         if type(other) == str:
             return 'Unknown' == other
@@ -44,7 +48,7 @@ class ChunkTypes(Enum):
     tIME = 19
     tRNS = 20
     zTXt = 21
-    Unknown = 22
+    nONe = 22
 
     def __str__(self):
         return self.name
