@@ -1,7 +1,7 @@
 from pngparser import PngParser
 import sys
 
-def removeIdats(png):
+def remove_idats(png):
 
         header = png.get_header()
         img = png.get_image_data()
@@ -11,13 +11,13 @@ def removeIdats(png):
 
         print("[!] Height: %d, real size: %d" % (height, rows_count))
 
-        img.rows = img.rows[:height]
+        img.rows = img.rows[:height]  # remove data out of image bounds
         png.set_image_data(img)
 
 if __name__ == "__main__":
     png = PngParser(sys.argv[1])
 
-    removeIdats(png)
+    remove_idats(png)
 
     png.save_file("example/tmp.png")
     print('[*] Done')
