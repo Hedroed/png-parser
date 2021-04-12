@@ -1,14 +1,16 @@
 import collections
 
+
 # Debug decorator
 def monitor_results(func):
     def wrapper(*func_args, **func_kwargs):
-        print('function call ' + func.__name__ + '()')
+        print(f'function call {func.__name__}()')
         retval = func(*func_args, **func_kwargs)
-        print('function ' + func.__name__ + '() returns ' + repr(retval))
+        print('function {func.__name__}() returns {retval!r}')
         return retval
     wrapper.__name__ = func.__name__
     return wrapper
+
 
 def flush_input():
     try:
@@ -16,8 +18,10 @@ def flush_input():
         while msvcrt.kbhit():
             msvcrt.getch()
     except ImportError:
-        import sys, termios
+        import sys
+        import termios
         termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+
 
 def pixel_type_to_length(type_):
     if type_ == 0:  # Greyscale
@@ -31,24 +35,25 @@ def pixel_type_to_length(type_):
     else:  # Palette
         return 1
 
+
 class BitArray(collections.Iterator):
-    def __init__(self, bytes, deep=8):
-        # print("Create BitArray with %s, %s" % (bytes, deep))
+    def __init__(self, bytes, depth=8):
+        # print("Create BitArray with %s, %s" % (bytes, depth))
         self.bytes = bytes
         self.pos = 0
-        self.deep = deep
+        self.depth = depth
 
         self.accumulator = 0
         self.bcount = 0
 
-        if deep == 16:
+        if depth == 16:
             self._readbits = self._read16bits
-        elif deep == 8:
+        elif depth == 8:
             self._readbits = self._read8bits
-        elif deep == 4 or deep == 2 or deep == 1:
+        elif depth == 4 or depth == 2 or depth == 1:
             self._readbits = self._readotherbits
         else:
-            raise ValueError("Deep must be 16, 8, 4, 2, 1 not %s" % deep)
+            raise ValueError("Depth must be 16, 8, 4, 2, 1 not %s" % deep)
 
     def _readbit(self, n=1):
         if self.pos >= len(self.bytes):
@@ -74,15 +79,15 @@ class BitArray(collections.Iterator):
             a = self._readbit(1)
             self.accumulator = a
             self.bcount = 8
-        self.bcount -= self.deep
-        ret = self.accumulator >> self.bcount & (2 ** self.deep - 1)
+        self.bcount -= self.depth
+        ret = self.accumulator >> self.bcount & (2 ** self.depth - 1)
         return ret
 
     def read(self):
         return self._readbits()
 
     def __len__(self):
-        return (len(self.bytes) * 8) // self.deep
+        return (len(self.bytes) * 8) // self.depth
 
     def __iter__(self):
         return self

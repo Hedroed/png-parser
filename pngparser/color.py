@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Color(Enum):
     r = '\033[0m'
     line = '\033[93m'

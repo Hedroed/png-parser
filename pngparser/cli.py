@@ -31,7 +31,7 @@ def show_banner():
         c = random.choice(colors)
         return "%s%s\033[0m" % (c, letter)
 
-    raw_banner="""
+    raw_banner = """
  ▄▄▄· ▐ ▄  ▄▄ •  ▄▄▄· ▄▄▄· ▄▄▄  .▄▄ · ▄▄▄ .▄▄▄
 ▐█ ▄█•█▌▐█▐█ ▀ ▪▐█ ▄█▐█ ▀█ ▀▄ █·▐█ ▀. ▀▄.▀·▀▄ █·
  ██▀·▐█▐▐▌▄█ ▀█▄ ██▀·▄█▀▀█ ▐▀▀▄ ▄▀▀▀█▄▐▀▀▪▄▐▀▀▄
@@ -45,9 +45,11 @@ def show_banner():
     final = "%s %s\n"
     print(final % (banner, version))
 
+
 def show_meta(filename):
     meta = "\033[1;33mFilename: \033[34m%s \033[35m| \033[33mSize: \033[34m%s\033[0m" % (os.path.basename(filename), os.stat(filename).st_size)
     print("%s\n" % meta)
+
 
 def print_error_and_exit(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -120,9 +122,10 @@ def args_parser():
 
     # Debug
     parser.add_argument('-v', '--verbose',
-                       action='store_true', help="Verbose mode")
+                        action='store_true', help="Verbose mode")
 
     return parser.parse_args()
+
 
 def main():
     show_banner()
@@ -164,4 +167,3 @@ def main():
 
     if args.show:
         flush_input()
-

@@ -1,23 +1,25 @@
 from pngparser import PngParser
 import sys
 
+
 def remove_idats(png):
 
-        header = png.get_header()
-        img = png.get_image_data()
+    header = png.get_header()
+    img = png.get_image_data()
 
-        height = header.height
-        rows_count = len(img.rows)
+    height = header.height
+    rows_count = len(img.rows)
 
-        print("[!] Height: %d, real size: %d" % (height, rows_count))
+    print(f"[!] Height: {height}, real size: {rows_count}")
 
-        img.rows = img.rows[:height]  # remove data out of image bounds
-        png.set_image_data(img)
+    img.rows = img.rows[:height]  # remove data out of image bounds
+    png.set_image_data(img)
+
 
 if __name__ == "__main__":
     png = PngParser(sys.argv[1])
 
     remove_idats(png)
 
-    png.save_file("example/tmp.png")
+    png.save_file("out.png")
     print('[*] Done')

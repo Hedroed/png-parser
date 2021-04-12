@@ -3,17 +3,14 @@ from PIL import Image
 from mmap import ACCESS_READ, mmap
 import os
 import logging
-from typing import List
+from typing import List, Optional
 
 from .chunktypes import ChunkField
-from .chunks import PNGChunks, Chunk
+from .chunks import Chunk
 from .chunkdata import ChunkData
 from .chunktypes import ChunkTypes
 from .color import Color
-from .loader import Loader
 from .imagedata import ImageData
-# from pixel import Pixel
-# from utils import BitArray
 
 PNG_MAGIC_NUMBER = b'\x89PNG\r\n\x1a\n'
 PNG_MAGIC_NUMBER_LENGTH = len(PNG_MAGIC_NUMBER)
@@ -47,7 +44,7 @@ class PngParser():
         #     logging.debug('%s[!] No header chunk%s' % (Color.unknown, Color.r))
 
     def __enter__(self):
-            return self
+        return self
 
     def __exit__(self, type_, value, traceback):
         if type_:
@@ -99,8 +96,8 @@ class PngParser():
         header_chunk = next(c for c in self.chunks if c.type == ChunkTypes.IHDR)
         return header_chunk.data
 
-    def get_image_data(self) -> ImageData:
-        idats = [ c for c in self.chunks if c.type == ChunkTypes.IDAT]
+    def get_image_data(self) -> Optional[ImageData]:
+        idats = [c for c in self.chunks if c.type == ChunkTypes.IDAT]
         header_chunk = next(c for c in self.chunks if c.type == ChunkTypes.IHDR)
 
         if len(idats) <= 0:
@@ -113,8 +110,9 @@ class PngParser():
             logging.debug('[!] Deflate all')
             data = zlib.decompress(data)
         except Exception:
-            logging.error('%sError in data decompression !%s' %
-                    (Color.unknown, Color.r))
+            logging.exception('%sError in data decompression !%s' %
+                              (Color.unknown, Color.r))
+            raise
         else:
             header = header_chunk.data
 
@@ -126,7 +124,7 @@ class PngParser():
             logging.debug("[!] %d Bytes per scanline" % line_width)
 
             scanlines = [data[i:i + line_width] for i in
-                            range(0, data_length, line_width)]
+                         range(0, data_length, line_width)]
 
             # If palette
             palette = None

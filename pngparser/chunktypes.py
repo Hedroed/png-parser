@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class ChunkField(Enum):
     DATA_LENGTH = 4
     TYPE = 4
@@ -18,7 +19,6 @@ class ChunkUnknown:
 
     def to_bytes(self):
         return self.name.encode()
-
 
     def __eq__(self, other):
         if type(other) == str:
@@ -72,8 +72,7 @@ class ChunkTypes(Enum):
     @staticmethod
     def from_binary(data):
         if len(data) != ChunkField.TYPE.length():
-            raise Exception(
-                'Incorrect a chunk type size {}!'.format(len(data)))
+            raise Exception(f'Incorrect a chunk type size {len(data)}!')
 
         try:
             chunk_type = data.decode('ascii')
@@ -94,7 +93,7 @@ class ChunkTypes(Enum):
         return chunk_type in [ChunkTypes.iTXt, ChunkTypes.tEXt, ChunkTypes.zTXt]
 
     def __eq__(self, other):
-        if type(other) == str:
+        if type(other) is str:
             return self.name == other
-        if type(other) == ChunkTypes:
+        if type(other) is ChunkTypes:
             return self.name == other.name

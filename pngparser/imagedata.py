@@ -2,12 +2,13 @@ from .image import Image
 from .utils import BitArray
 from .pixel import Pixel
 
+
 class ImageData():
     def __init__(self, header, scanlines, palette=None):
         self.header = header
         self.raw_data = b''.join(line[1:] for line in scanlines)
         self.scanlines = scanlines
-        
+
         if palette:
             color_type = self.header.color_type
             self.palette = [Pixel(color_type, px) for px in palette.palette]
@@ -37,7 +38,7 @@ class ImageData():
         return ret
 
     def __bytes__(self):
-        return self.save_to_bytes() 
+        return self.save_to_bytes()
 
     def _loadPixels(self, row):
         pixels = []
@@ -91,7 +92,7 @@ class ImageDataRow():
         self.color_type = color_type
         self.image = image
 
-    def update_filter(self, new_filter:int):
+    def update_filter(self, new_filter: int):
         self.computePixels()
 
         if self.filter == new_filter:
@@ -104,7 +105,6 @@ class ImageDataRow():
             new_pixels.append(pixel)
 
         self.pixels = new_pixels
-
 
     def computePixels(self):
         for x, px in enumerate(self.pixels):

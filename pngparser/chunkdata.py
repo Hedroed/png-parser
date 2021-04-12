@@ -7,44 +7,13 @@ from .chunktypes import ChunkTypes
 from .color import Color
 from .utils import pixel_type_to_length
 
+
 class ChunkData:
-    @staticmethod
-    def get_chunk_data(chunk_type: ChunkTypes, data: bytes) -> "ChunkData":
-        if chunk_type == ChunkTypes.IHDR:
-            return ChunkDataIHDR(data)
-
-        elif chunk_type == ChunkTypes.PLTE:
-            return ChunkDataPLTE(data)
-        
-        elif chunk_type == ChunkTypes.IDAT:
-            return ChunkDataRaw(data)
-
-        elif chunk_type == ChunkTypes.IEND:
-            return ChunkDataRaw(data)
-
-        elif chunk_type == ChunkTypes.tEXt:
-            return ChunkDataText(data)
-
-        elif chunk_type == ChunkTypes.iTXt:
-            return ChunkDataText(data)
-
-        elif chunk_type == ChunkTypes.zTXt:
-            return ChunkDataZText(data)
-
-        elif chunk_type == ChunkTypes.tIME:
-            return ChunkDataTime(data)
-
-        elif chunk_type == ChunkTypes.pHYs:
-            return ChunkPhysical(data)
-
-        else:
-            return ChunkData(data)
-
     def __init__(self, data):
         self.data = data
 
     def __repr__(self):
-        return "AbstractChunkData(%s)" % self.data
+        return "GenericChunkData(%s)" % self.data
 
     def __len__(self):
         return len(self.data)
@@ -57,30 +26,30 @@ class ChunkDataText(ChunkData):
 
     def __repr__(self):
         return "ChunkDataText(%s)" % self.data
-        
+
     def __str__(self):
         return "%s%s%s" % (Color.text, self.text, Color.r)
+
 
 class ChunkDataZText(ChunkData):
     def __init__(self, data):
         self.data = data
 
         d = data.split(b'\x00', maxsplit=1)
-        
+
         self.key = d[0].decode('utf-8')
         rest = d[1]
         self.method = rest[0]
-        self.text = zlib.decompress(rest[1:]).decode('utf-8')
-
+        self.text = zlib.decompress(rest[1:]).decode('utf-8', 'replace')
 
     def __repr__(self):
         return "ChunkDataZText(%s)" % self.data
-        
+
     def __str__(self):
-        ret  = "%sKey : %s%s\n" % (Color.text, Color.data, self.key)
+        ret = "%sKey : %s%s\n" % (Color.text, Color.data, self.key)
         ret += "%sText : %s%s\n" % (Color.text, Color.data, self.text)
         ret += "%sMethod : %s%s\n" % (Color.text, Color.data, self.method)
-        
+
         return "%s%s" % (ret, Color.r)
 
 
@@ -90,7 +59,6 @@ class ChunkDataTime(ChunkData):
 
         values = struct.unpack('>HBBBBB', data)
         self.date = datetime(*values)
-
 
     def __str__(self):
         return "%sDate: %s%s" % (Color.text,
@@ -120,6 +88,7 @@ class ChunkBackground(ChunkData):
     def __init__(self, data):
         self.data = data
         # TODO
+
 
 class ChunkDataRaw(ChunkData):
     def __init__(self, data):
@@ -231,3 +200,35 @@ class ChunkDataPLTE(ChunkData):
         image.show()
 
         return "%s%s%s" % (ret, self.data, Color.r)
+
+
+def get_chunk_data(chunk_type: ChunkTypes, data: bytes) -> ChunkData:
+    if chunk_type == ChunkTypes.IHDR:
+        return ChunkDataIHDR(data)
+
+    elif chunk_type == ChunkTypes.PLTE:
+        return ChunkDataPLTE(data)
+
+    elif chunk_type == ChunkTypes.IDAT:
+        return ChunkDataRaw(data)
+
+    elif chunk_type == ChunkTypes.IEND:
+        return ChunkDataRaw(data)
+
+    elif chunk_type == ChunkTypes.tEXt:
+        return ChunkDataText(data)
+
+    elif chunk_type == ChunkTypes.iTXt:
+        return ChunkDataText(data)
+
+    elif chunk_type == ChunkTypes.zTXt:
+        return ChunkDataZText(data)
+
+    elif chunk_type == ChunkTypes.tIME:
+        return ChunkDataTime(data)
+
+    elif chunk_type == ChunkTypes.pHYs:
+        return ChunkPhysical(data)
+
+    else:
+        return ChunkData(data)

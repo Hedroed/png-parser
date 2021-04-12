@@ -1,6 +1,7 @@
 from .utils import pixel_type_to_length
 from .chunkdata import ChunkDataIHDR
 
+
 class Pixel():
     def __init__(self, type_, values=[]):
         self.type = type_
