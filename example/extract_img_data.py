@@ -8,7 +8,7 @@ def extractData(png):
     header = png.get_by_type(ChunkTypes.IHDR)[0]
     print(header.data, file=sys.stderr)
 
-    data = bytes(png.get_image_data())
+    data = png.get_image_data().to_bytes()
     return data
 
 

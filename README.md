@@ -8,34 +8,117 @@ Best tool to analyse PNG file, it show you png chunks : header, palette and text
 ![demo text](public/screen2.png)
 
 
-## Installation
-
-Simply run:
-
 ```sh
-python setup.py install
+pip install --user git+https://github.com/Hedroed/png-parser
 ```
+
 
 ## Usage
 
 To use it:
 
 ```sh
-png-parser --help
-```
+> $ png-parser --help
+
+ ▄▄▄· ▐ ▄  ▄▄ •  ▄▄▄· ▄▄▄· ▄▄▄  .▄▄ · ▄▄▄ .▄▄▄
+▐█ ▄█•█▌▐█▐█ ▀ ▪▐█ ▄█▐█ ▀█ ▀▄ █·▐█ ▀. ▀▄.▀·▀▄ █·
+ ██▀·▐█▐▐▌▄█ ▀█▄ ██▀·▄█▀▀█ ▐▀▀▄ ▄▀▀▀█▄▐▀▀▪▄▐▀▀▄
+▐█▪·•██▐█▌▐█▄▪▐█▐█▪·•▐█ ▪▐▌▐█•█▌▐█▄▪▐█▐█▄▄▌▐█•█▌
+.▀   ▀▀ █▪·▀▀▀▀ .▀    ▀  ▀ .▀  ▀ ▀▀▀▀  ▀▀▀ .▀  ▀
+ v1.1.0
+
+usage: png-parser [-h] [-a | -c CHUNK_ID | -t TYPE | --text] [-d] [--length] [--crc] [--hex] [--show] [--output OUTPUT] [-v] file
+
+Prints PNG text sections
+
+positional arguments:
+  file                  an PNG image
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --all             Print all chunk infos
+  --text                Display all text chunk
+  -c CHUNK_ID, --chunk CHUNK_ID
+                        Print the chunk with this id
+  -t TYPE, --type TYPE  Filter chunk by type
+  -d, --data            Print chunk data
+  --length          Print chunk length
+  --crc             Print chunk crc and check if is right
+  --hex                 Print bytes position in Hexadecimal
+  -s, --show            Show image
+  --output OUTPUT       Save image (fix input file errors if any)
+  -v, --verbose         Verbose mode```
+
+
+## API
+
+
+### Class PngParser
+
+PngParser(file)
+
+file: str or file type
+
+PngParser.get_image_data()
+
+PngParser.set_image_data()
+
+PngParser.get_chunk_by_index(idx)
+
+PngParser.get_chunk_by_type(type)
+
+
+### Class Chunk
+
+Chunk(type, data=None, crc=None)
+
+Chunk.update_crc()
+
+Chunk.length
+
+
+### Class ImageData
+
+ImageData(header, data, palette=None)
+
+ImageData.scanlines
+
+ImageData.get_pixel(x, y)
+
+ImageData.set_pixel(x, y, pixel)
+ImageData.set_pixel(x, y, data)
+
+
+### Class Scanline
+
+Scanline(filter, data, previous=None)
+
+Scanline.filter
+
+Scanline.data
+
+
+### Class Pixel
+
+Pixel(type, channels)
+Pixel.__getitem__
+
+
+
 
 ## Dev
 
-### Run example
-
-```
-python example/read_png_filters.py
-```
 
 ### Install for development
 
 ```sh
 python setup.py develop
+```
+
+### Run example
+
+```
+python example/read_png_filters.py
 ```
 
 

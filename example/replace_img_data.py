@@ -10,8 +10,7 @@ def replaceData(png, data):
 
     data_length = len(data)
     line_width = header.width * header.pixel_len + 1
-    scanlines = [data[i:i + line_width] for i in
-                 range(0, data_length, line_width)]
+    scanlines = [data[i:i + line_width] for i in range(0, data_length, line_width)]
 
     palette = None
     # If palette

@@ -19,11 +19,12 @@ def hideData(png, data: bytes):
     splitted_data_bin = [data_bin[i:i+2] for i in range(0, len(data_bin), 2)]
 
     for y, r in enumerate(img.rows):
-        if y < len(splitted_data_bin):
-            new_filter_id = int(splitted_data_bin[y], 2)
-            r.update_filter(new_filter_id)
-        elif y == len(splitted_data_bin):
-            r.update_filter(4)
+        # if y < len(splitted_data_bin):
+        #     new_filter_id = int(splitted_data_bin[y], 2)
+        #     r.update_filter(new_filter_id)
+        # elif y == len(splitted_data_bin):
+        #     r.update_filter(4)
+        r.update_filter(0)
 
     png.set_image_data(img)
 

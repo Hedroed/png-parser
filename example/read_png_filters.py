@@ -1,22 +1,21 @@
-from pngparser import PngParser, ImageData, ChunkTypes
+from pngparser import PngParser, ImageData, TYPE_IHDR
 
 import sys
 
 
 def extractData(png):
 
-    header = png.get_by_type(ChunkTypes.IHDR)[0]
-    print(header.data)
+    header = png.get_by_type(TYPE_IHDR)[0]
 
     img = png.get_image_data()
 
     data_bin = ""
     data = ""
-    for r in img.rows:
-        data += str(r.filter)
+    for sc in img.scanlines:
+        data += str(sc.filter)
 
         # hidden challenge
-        d = r.filter % 4
+        d = sc.filter % 4
         f = "{:02b}".format(d)
         data_bin += f
 

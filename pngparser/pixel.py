@@ -68,9 +68,6 @@ class Pixel():
     def to_bytes(self):
         return bytearray(self.values)
 
-    def __bytes__(self):
-        return bytes(self.to_bytes())
-
     def __getitem__(self, key):
         return self.values[key]
 

@@ -3,89 +3,80 @@ from PIL import Image
 from mmap import ACCESS_READ, mmap
 import os
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-from .chunktypes import ChunkField
-from .chunks import Chunk
-from .chunkdata import ChunkData
-from .chunktypes import ChunkTypes
+from .chunktypes import CHUNK_CRC_SIZE, CHUNK_LENGTH_SIZE, CHUNK_TYPE_SIZE, is_text_chunk, TYPE_IHDR
+from .chunks import create_chunk, ChunkRaw
+from .chunktypes import *
 from .color import Color
 from .imagedata import ImageData
 
 PNG_MAGIC_NUMBER = b'\x89PNG\r\n\x1a\n'
-PNG_MAGIC_NUMBER_LENGTH = len(PNG_MAGIC_NUMBER)
+PNG_MAGIC_NUMBER_SIZE = len(PNG_MAGIC_NUMBER)
 
 
 class PngParser():
     def __init__(self, file):
 
         if type(file) == str:
-            logging.debug("[!] Open file")
+            logging.debug("opening file %s", file)
             self.file = open(file, 'rb')
 
         else:
-            logging.debug("[!] Read file")
+            logging.debug("read data")
             self.file = file
 
         # check file header
-        if self.file.read(PNG_MAGIC_NUMBER_LENGTH) != PNG_MAGIC_NUMBER:
-            raise Exception('"{}" file is not a PNG !'.format(self.file.name))
+        if self.file.read(PNG_MAGIC_NUMBER_SIZE) != PNG_MAGIC_NUMBER:
+            raise Exception(f'"{self.file.name}" file is not a PNG !')
 
         # load the picture to memory
         mm = mmap(self.file.fileno(), 0, access=ACCESS_READ)
         # skip file header
-        mm.seek(PNG_MAGIC_NUMBER_LENGTH, os.SEEK_SET)
+        mm.seek(PNG_MAGIC_NUMBER_SIZE, os.SEEK_SET)
 
         self.chunks: List[Chunk] = []
+        self.chunks_pos: List[Tuple[int, int]] = []
         self.reader = mm
 
         self._readChunk()
-        # if all(c.type != ChunkTypes.IHDR for c in self.chunks):
-        #     logging.debug('%s[!] No header chunk%s' % (Color.unknown, Color.r))
+        if all(c.type != TYPE_IHDR for c in self.chunks):
+            logging.warning('found no header chunk')
 
     def __enter__(self):
         return self
 
     def __exit__(self, type_, value, traceback):
         if type_:
-            print("Error %s : %s\n%s" % (type_, value, traceback))
+            logging.error("png error %s : %s\n%s", type_, value, traceback)
 
         self.close()
 
     def close(self):
-        logging.debug("[!] Close file")
+        logging.debug("closing file")
         self.file.close()
 
     def _readChunk(self):
-        self.count = 0
-        stop = False
-        while not stop:
-            # start_position = self.reader.tell()
-
+        position = 0
+        while True:
             # read data length
-            length_byte = self.reader.read(ChunkField.DATA_LENGTH.length())
+            length_byte = self.reader.read(CHUNK_LENGTH_SIZE)
 
-            if length_byte == b"":
-                stop = True
+            if not length_byte:
                 break
 
             chunk_length = int.from_bytes(length_byte, byteorder='big')
-            # read type
-            type_ = self.reader.read(ChunkField.TYPE.length())
-            # read data
-            data = self.reader.read(chunk_length)
-            # read crc
-            crc = self.reader.read(ChunkField.CRC.length())
 
-            try:
-                current_chunk = Chunk.parse(type_, data, crc)
-            except Exception as e:
-                raise e
-                return None
-            else:
-                logging.debug("[!] Found chunk %s" % (current_chunk.type))
-                self.chunks.append(current_chunk)
-                self.count += 1
+            chunk_type = self.reader.read(CHUNK_TYPE_SIZE)
+            data = self.reader.read(chunk_length)
+            crc = self.reader.read(CHUNK_CRC_SIZE)
+
+            self.chunks_pos.append((position, self.reader.tell()-1))
+            position = self.reader.tell()
+
+            current_chunk = create_chunk(chunk_type, data, crc)
+            logging.debug("found chunk %s", current_chunk.type)
+            self.chunks.append(current_chunk)
 
     def show_image(self):
 
@@ -93,62 +84,49 @@ class PngParser():
         img.show()
 
     def get_header(self):
-        header_chunk = next(c for c in self.chunks if c.type == ChunkTypes.IHDR)
-        return header_chunk.data
+        return next(c for c in self.chunks if c.type == TYPE_IHDR)
 
     def get_image_data(self) -> Optional[ImageData]:
-        idats = [c for c in self.chunks if c.type == ChunkTypes.IDAT]
-        header_chunk = next(c for c in self.chunks if c.type == ChunkTypes.IHDR)
+        header_chunk = self.get_header()
 
-        if len(idats) <= 0:
+        data = b''.join(c.data for c in self.chunks if c.type == TYPE_IDAT)
+        if not data:
             return None
-        data = b''
-        for idat in idats:
-            data += idat.data.data
 
         try:
-            logging.debug('[!] Deflate all')
+            logging.debug('deflate all data')
             data = zlib.decompress(data)
         except Exception:
-            logging.exception('%sError in data decompression !%s' %
-                              (Color.unknown, Color.r))
+            logging.exception('error in data decompression')
             raise
         else:
-            header = header_chunk.data
+            header = header_chunk
 
             data_length = len(data)
-            logging.debug("[!] %d Bytes decompressed data" % data_length)
-
-            # line_width = pixel_count_in_line * bytes_count_by_pixel + the_filter_byte
-            line_width = header.width * header.pixel_len + 1
-            logging.debug("[!] %d Bytes per scanline" % line_width)
-
-            scanlines = [data[i:i + line_width] for i in
-                         range(0, data_length, line_width)]
+            logging.debug("%d decompressed byte data loaded", data_length)
 
             # If palette
             palette = None
             if header.use_palette():
-                logging.debug("[!] Use palette")
-                palette_chunk = next(c for c in self.chunks if c.type == ChunkTypes.PLTE)
-                palette = palette_chunk.data
+                logging.debug("use palette")
+                palette = next(c for c in self.chunks if c.type == TYPE_PLTE)
 
-            img = ImageData(header, scanlines, palette=palette)
+            img = ImageData(header, data, palette=palette)
 
             return img
 
     def set_image_data(self, img: ImageData):
-        data = img.save_to_bytes()
+        data = img.to_bytes()
 
         compressed_data = zlib.compress(data)
         # new_chunk_size = len(compressed_data)
 
-        new_idat = Chunk(ChunkTypes.IDAT, ChunkData(compressed_data))
+        new_idat = ChunkRaw(TYPE_IDAT, compressed_data, None)
 
         new_inserted = False
         new_chunks = []
         for chunk in self.chunks:
-            if chunk.type == ChunkTypes.IDAT:
+            if chunk.type == TYPE_IDAT:
                 if not new_inserted:
                     new_inserted = True
                     new_chunks.append(new_idat)
@@ -157,7 +135,7 @@ class PngParser():
 
         self.chunks = new_chunks
         for c in self.chunks:
-            logging.debug("[!] New chunks: %s" % c.type)
+            logging.debug("new chunks: %s", c.type)
 
     def save_file(self, path):
 
@@ -165,22 +143,27 @@ class PngParser():
             f.write(PNG_MAGIC_NUMBER)
 
             for chunk in self.chunks:
-                f.write(bytes(chunk))
+                # update chunk crc
+                chunk.crc = zlib.crc32(chunk.type + chunk.data).to_bytes(CHUNK_CRC_SIZE, 'big')
+                f.write(chunk.to_bytes())
 
-    def get_by_id(self, id_):
-        if id_ >= len(self.chunks):
-            raise Exception('ID too big')
+    def get_by_index(self, idx):
+        if idx >= len(self.chunks):
+            raise Exception(f'index {idx} too big')
 
-        return [self.chunks[id_]]
+        return self.chunks[idx]
 
     def get_by_type(self, typeChunk):
-        if not ChunkTypes.contains(typeChunk):
-            raise Exception('Type not exist')
-
         return [item for item in self.chunks if item.type == typeChunk]
 
     def get_all(self):
         return self.chunks
 
     def get_text_chunks(self):
-        return [i for i in self.chunks if ChunkTypes.is_text_chunk(i.type)]
+        return [i for i in self.chunks if is_text_chunk(i.type)]
+
+    def get_pos(self, chunk: ChunkRaw) -> Tuple[int, int]:
+        try:
+            return self.chunks_pos[self.chunks.index(chunk)]
+        except ValueError:
+            return (0, 0)

@@ -12,28 +12,19 @@ def monitor_results(func):
     return wrapper
 
 
-def flush_input():
-    try:
-        import msvcrt
-        while msvcrt.kbhit():
-            msvcrt.getch()
-    except ImportError:
-        import sys
-        import termios
-        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
-
-
-def pixel_type_to_length(type_):
-    if type_ == 0:  # Greyscale
+def pixel_type_to_length(color_type: int) -> int:
+    if color_type == 0:  # Greyscale
         return 1
-    elif type_ == 2:  # RGB
+    elif color_type == 2:  # RGB
         return 3
-    elif type_ == 4:  # Greyscale + alpha
-        return 2
-    elif type_ == 6:  # RGB + Alpha
-        return 4
-    else:  # Palette
+    elif color_type == 3:  # Palette
         return 1
+    elif color_type == 4:  # Greyscale + alpha
+        return 2
+    elif color_type == 6:  # RGB + Alpha
+        return 4
+    else:  # Other
+        raise ValueError(f"Invalid color type {color_type}")
 
 
 class BitArray(collections.Iterator):

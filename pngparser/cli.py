@@ -6,12 +6,22 @@ import os.path
 import sys
 import logging
 import random
+import zlib
 
 from .color import Color
-from .utils import monitor_results, flush_input
-from .chunktypes import ChunkTypes
+from .utils import monitor_results
 from .png import PngParser
 from .version import __version__
+from .chunktypes import CHUNK_CRC_SIZE
+
+
+RAW_BANNER = """
+ ▄▄▄· ▐ ▄  ▄▄ •  ▄▄▄· ▄▄▄· ▄▄▄  .▄▄ · ▄▄▄ .▄▄▄
+▐█ ▄█•█▌▐█▐█ ▀ ▪▐█ ▄█▐█ ▀█ ▀▄ █·▐█ ▀. ▀▄.▀·▀▄ █·
+ ██▀·▐█▐▐▌▄█ ▀█▄ ██▀·▄█▀▀█ ▐▀▀▄ ▄▀▀▀█▄▐▀▀▪▄▐▀▀▄
+▐█▪·•██▐█▌▐█▄▪▐█▐█▪·•▐█ ▪▐▌▐█•█▌▐█▄▪▐█▐█▄▄▌▐█•█▌
+.▀   ▀▀ █▪·▀▀▀▀ .▀    ▀  ▀ .▀  ▀ ▀▀▀▀  ▀▀▀ .▀  ▀
+"""
 
 
 def show_banner():
@@ -31,14 +41,7 @@ def show_banner():
         c = random.choice(colors)
         return "%s%s\033[0m" % (c, letter)
 
-    raw_banner = """
- ▄▄▄· ▐ ▄  ▄▄ •  ▄▄▄· ▄▄▄· ▄▄▄  .▄▄ · ▄▄▄ .▄▄▄
-▐█ ▄█•█▌▐█▐█ ▀ ▪▐█ ▄█▐█ ▀█ ▀▄ █·▐█ ▀. ▀▄.▀·▀▄ █·
- ██▀·▐█▐▐▌▄█ ▀█▄ ██▀·▄█▀▀█ ▐▀▀▄ ▄▀▀▀█▄▐▀▀▪▄▐▀▀▄
-▐█▪·•██▐█▌▐█▄▪▐█▐█▪·•▐█ ▪▐▌▐█•█▌▐█▄▪▐█▐█▄▄▌▐█•█▌
-.▀   ▀▀ █▪·▀▀▀▀ .▀    ▀  ▀ .▀  ▀ ▀▀▀▀  ▀▀▀ .▀  ▀
-"""
-    banner = "".join(colorize(l) for l in raw_banner)
+    banner = "".join(colorize(l) for l in RAW_BANNER)
 
     version = "\033[1mv%s\033[0m" % __version__
 
@@ -56,35 +59,38 @@ def print_error_and_exit(*args, **kwargs):
     exit(1)
 
 
-def print_chunk(chunk, idx, data=False, crc=False, length=False, hexa=False):
-    # sPos = chunk.start_position
-    # ePos = chunk.end_position
-    # if hexa:
-    #     print('[{}{:08x}-{:08x}{}] ({}{}{})'.format(Color.line, sPos, ePos,
-    #                                                 Color.r, Color.id,
-    #                                                 chunk.id, Color.r))
-    # else:
-    #     print('[{}{:08d}-{:08d}{}] ({}{}{})'.format(Color.line, sPos,
-    #                                                 ePos, Color.r,
-    #                                                 Color.id, chunk.id,
-    #                                                 Color.r))
-    print('({}{}{})'.format(Color.id, idx, Color.r))
-    print('{}{}{}:'.format(Color.chunk, chunk.type, Color.r))
+def print_chunk(chunk, idx, sPos, ePos, print_data=False, format_raw=False, print_crc=False, print_length=False, hexa=False):
+    if hexa:
+        print('[{}{:08x}-{:08x}{}] ({}{}{})'.format(Color.line, sPos, ePos,
+                                                    Color.r, Color.id,
+                                                    idx, Color.r))
+    else:
+        print('[{}{:08d}-{:08d}{}] ({}{}{})'.format(Color.line, sPos,
+                                                    ePos, Color.r,
+                                                    Color.id, idx,
+                                                    Color.r))
+    # print('({}{}{})'.format(Color.id, idx, Color.r))
+    try:
+        print('{}{}{}:'.format(Color.chunk, chunk.type.decode(), Color.r))
+    except UnicodeDecodeError:
+        print('{}{}{}:'.format(Color.chunk, chunk.type, Color.r))
 
-    if crc:
+    if print_crc:
         current = chunk.crc
-        computed = chunk.compute_crc()
+        computed = zlib.crc32(chunk.type + chunk.data).to_bytes(CHUNK_CRC_SIZE, 'big')
         if current == computed:
             print('{}CRC : {}{}'.format(Color.crc, computed.hex(), Color.r))
         else:
             print('{}CRC : {} : Incorrect must be {}{}'.format(Color.crc, current.hex(), computed.hex(), Color.r))
-    if length:
-        print('{}Length : {}{}'.format(Color.length, chunk.length,
-                                       Color.r))
+    if print_length:
+        print('{}Length : {}{}'.format(Color.length, ePos - sPos, Color.r))
 
     print('{}Data size : {}{}'.format(Color.length, len(chunk.data), Color.r))
-    if data:
-        print(str(chunk.data))
+    if print_data:
+        if format_raw:
+            print(chunk.data)
+        else:
+            print(chunk)
 
     print()
 
@@ -95,34 +101,24 @@ def args_parser():
 
     # Select Chunk
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-a', '--all', help='Print all chunk infos',
-                       action='store_true')
-    group.add_argument('-o', '--object', help='Print the chunk with this id',
-                       type=int)
-    group.add_argument('-t', '--type', help='Filter chunk by type',
-                       type=str)
-    group.add_argument('--text', help='Display all text chunk',
-                       action='store_true')
+    group.add_argument('-a', '--all', help='Print all chunk infos', action='store_true')
+    group.add_argument('-c', '--chunk', help='Select chunk from this id', type=int)
+    group.add_argument('-t', '--type', help='Select chunks by type', type=str)
+    group.add_argument('--text', help='Display all text chunk', action='store_true')
 
     # Chunk infos
-    parser.add_argument('-d', '--data', help='Print chunk data',
-                        action='store_true')
-    parser.add_argument('-l', '--length', help='Print chunk length',
-                        action='store_true')
-    parser.add_argument('-c', '--crc', help='Print chunk crc and check if is right',
-                        action='store_true')
-    parser.add_argument('--hex', help='Print bytes position in Hexadecimal',
-                        action='store_true')
-    parser.add_argument('-s', '--show', help='Show image',
-                        action='store_true')
+    parser.add_argument('-d', '--data', help='Print chunk data', action='store_true')
+    parser.add_argument('--raw', help='Print chunk data as raw bytes', action='store_true')
+    parser.add_argument('--length', help='Print chunk length', action='store_true')
+    parser.add_argument('--crc', help='Print chunk crc and check if is right', action='store_true')
+    parser.add_argument('--hex', help='Print bytes position in Hexadecimal', action='store_true')
+    parser.add_argument('-s', '--show', help='Show image', action='store_true')
 
     # Save file
-    parser.add_argument('--output', help='Save image (fixe current file error)',
-                        type=str, default='')
+    parser.add_argument('-o', '--output', help='Save image (fix input file errors if any)', type=str, default='')
 
     # Debug
-    parser.add_argument('-v', '--verbose',
-                        action='store_true', help="Verbose mode")
+    parser.add_argument('-v', '--verbose', action='count', help="Increase verbosity")
 
     return parser.parse_args()
 
@@ -137,26 +133,29 @@ def main():
     show_meta(filename)
 
     if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     with PngParser(filename) as png:
 
         chunks = None
-        if args.object is not None:
-            chunks = png.get_by_id(args.object)
+        if args.chunk is not None:
+            chunks = [png.get_by_index(args.chunk)]
 
         elif args.type is not None:
-            type_ = ChunkTypes.from_binary(args.type.encode())
-            chunks = png.get_by_type(type_)
+            chunks = png.get_by_type(args.type.encode())
 
         elif args.text:
+            args.data = True
             chunks = png.get_text_chunks()
 
         else:
             chunks = png.get_all()
 
         for idx, chunk in enumerate(chunks):
-            print_chunk(chunk, idx, args.data, args.crc, args.length, args.hex)
+            spos, epos = png.get_pos(chunk)
+            print_chunk(chunk, idx, spos, epos, args.data, args.raw, args.crc, args.length, args.hex)
 
         if args.show:
             png.show_image()
@@ -165,5 +164,5 @@ def main():
             name = args.output
             png.save_file(name)
 
-    if args.show:
-        flush_input()
+    # if args.show:
+    #     flush_input()

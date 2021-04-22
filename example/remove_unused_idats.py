@@ -8,11 +8,11 @@ def remove_idats(png):
     img = png.get_image_data()
 
     height = header.height
-    rows_count = len(img.rows)
+    rows_count = len(img.scanlines)
 
     print(f"[!] Height: {height}, real size: {rows_count}")
 
-    img.rows = img.rows[:height]  # remove data out of image bounds
+    img.scanlines = img.scanlines[:height]  # remove data out of image bounds
     png.set_image_data(img)
 
 
