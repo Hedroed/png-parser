@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 
 
 # Debug decorator
@@ -27,7 +27,7 @@ def pixel_type_to_length(color_type: int) -> int:
         raise ValueError(f"Invalid color type {color_type}")
 
 
-class BitArray(collections.Iterator):
+class BitArray(collections.abc.Iterator):
     def __init__(self, bytes, depth=8):
         # print("Create BitArray with %s, %s" % (bytes, depth))
         self.bytes = bytes
