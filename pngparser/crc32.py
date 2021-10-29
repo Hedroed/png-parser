@@ -40,4 +40,4 @@ class CRC():
         self.good = crc
 
     def __repr__(self):
-        return "%x : %s" % (self.crc, "OK" if self.valid else "Incorrect must be %x" % self.good)
+        return f'{self.crc:x} : {"OK" if self.valid else f"Incorrect must be {self.good:x}"}'

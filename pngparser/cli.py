@@ -38,20 +38,17 @@ def show_banner():
         if letter in (" ", "\n"):
             return letter
         c = random.choice(colors)
-        return "%s%s\033[0m" % (c, letter)
+        return f"{c}{letter}\033[0m"
 
     banner = "".join(colorize(l) for l in RAW_BANNER)
+    version = f"\033[1mv{__version__}\033[0m"
 
-    version = "\033[1mv%s\033[0m" % __version__
-
-    final = "%s %s\n"
-    print(final % (banner, version))
+    print(f"{banner} {version}\n")
 
 
 def show_meta(filename):
-    meta = "\033[1;33mFilename: \033[34m%s \033[35m| \033[33mSize: \033[34m%s\033[0m" % (
-        os.path.basename(filename), os.stat(filename).st_size)
-    print("%s\n" % meta)
+    meta = f"\033[1;33mFilename: \033[34m{os.path.basename(filename)} \033[35m| \033[33mSize: \033[34m{os.stat(filename).st_size}\033[0m\n"
+    print(meta)
 
 
 def print_error_and_exit(*args, **kwargs):
@@ -61,33 +58,26 @@ def print_error_and_exit(*args, **kwargs):
 
 def print_chunk(chunk, idx, sPos, ePos, print_data=False, format_raw=False, print_crc=False, print_length=False, hexa=False):
     if hexa:
-        print('[{}{:08x}-{:08x}{}] ({}{}{})'.format(Color.line, sPos, ePos,
-                                                    Color.r, Color.id,
-                                                    idx, Color.r))
+        print(f'[{Color.line}{sPos:08x}-{ePos:08x}{Color.r}] ({Color.id}{idx}{Color.r})')
     else:
-        print('[{}{:08d}-{:08d}{}] ({}{}{})'.format(Color.line, sPos,
-                                                    ePos, Color.r,
-                                                    Color.id, idx,
-                                                    Color.r))
-    # print('({}{}{})'.format(Color.id, idx, Color.r))
+        print(f'[{Color.line}{sPos:08d}-{ePos:08d}{Color.r}] ({Color.id}{idx}{Color.r})')
     try:
-        print('{}{}{}:'.format(Color.chunk, chunk.type.decode(), Color.r))
+        print(f'{Color.chunk}{chunk.type.decode()}{Color.r}:')
     except UnicodeDecodeError:
-        print('{}{}{}:'.format(Color.chunk, chunk.type, Color.r))
+        print(f'{Color.chunk}{chunk.type}{Color.r}:')
 
     if print_crc:
         current = chunk.crc
         computed = zlib.crc32(
             chunk.type + chunk.data).to_bytes(CHUNK_CRC_SIZE, 'big')
         if current == computed:
-            print('{}CRC : {}{}'.format(Color.crc, computed.hex(), Color.r))
+            print(f'{Color.crc}CRC : {computed.hex()}{Color.r}')
         else:
-            print('{}CRC : {} : Incorrect must be {}{}'.format(
-                Color.crc, current.hex(), computed.hex(), Color.r))
+            print(f'{Color.crc}CRC : {current.hex()} : Incorrect must be {computed.hex()}{Color.r}')
     if print_length:
-        print('{}Length : {}{}'.format(Color.length, ePos - sPos, Color.r))
+        print(f'{Color.length}Length : {ePos - sPos}{Color.r}')
 
-    print('{}Data size : {}{}'.format(Color.length, len(chunk.data), Color.r))
+    print(f'{Color.length}Data size : {len(chunk.data)}{Color.r}')
     if print_data:
         if format_raw:
             print(chunk.data)
