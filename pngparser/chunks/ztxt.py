@@ -18,9 +18,9 @@ class ChunkZtxt:
 
     def to_bytes(self):
         data = bytearray()
-        data += key.encode()
+        data += self.key.encode()
         data.append(0)
-        data.append(method)
+        data.append(self.method)
         data += zlib.compress(self.text.encode())
 
         l = len(data).to_bytes(CHUNK_LENGTH_SIZE, 'big')

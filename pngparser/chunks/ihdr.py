@@ -77,12 +77,19 @@ class ChunkIHDR:
     def __str__(self):
         ret = ""
 
-        ret += "%s - %s : %s%s%s\n" % (Color.text, "Width", Color.id, self.width, Color.r)
-        ret += "%s - %s : %s%s%s\n" % (Color.text, "Height", Color.id, self.height, Color.r)
-        ret += "%s - %s : %s%s%s\n" % (Color.text, "Bit depth", Color.id, self.bit_depth, Color.r)
-        ret += "%s - %s : %s%s%s\n" % (Color.text, "Color type", Color.id, self.color_type_display, Color.r)
-        ret += "%s - %s : %s%s%s\n" % (Color.text, "Compression method", Color.id, self.compression_method, Color.r)
-        ret += "%s - %s : %s%s%s\n" % (Color.text, "Filter method", Color.id, self.filter_method, Color.r)
-        ret += "%s - %s : %s%s%s\n" % (Color.text, "Interlace method", Color.id, self.interlace_method, Color.r)
+        ret += "%s - %s : %s%s%s\n" % (Color.text,
+                                       "Width", Color.id, self.width, Color.r)
+        ret += "%s - %s : %s%s%s\n" % (Color.text,
+                                       "Height", Color.id, self.height, Color.r)
+        ret += "%s - %s : %s%s%s\n" % (Color.text,
+                                       "Bit depth", Color.id, self.bit_depth, Color.r)
+        ret += "%s - %s : %s%s%s\n" % (Color.text, "Color type",
+                                       Color.id, self.color_type_display, Color.r)
+        ret += "%s - %s : %s%s%s\n" % (Color.text, "Compression method",
+                                       Color.id, self.compression_method, Color.r)
+        ret += "%s - %s : %s%s%s\n" % (Color.text, "Filter method",
+                                       Color.id, self.filter_method, Color.r)
+        ret += "%s - %s : %s%s%s\n" % (Color.text, "Interlace method",
+                                       Color.id, self.interlace_method, Color.r)
 
         return ret

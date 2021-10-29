@@ -12,7 +12,8 @@ class Image():
         self.data = [Pixel(pixel_type)] * (width * height)
 
     def putpixel(self, position, pixel: Pixel):
-        assert type(pixel) == Pixel, "Must be type Pixel"
+        # if not isinstance(pixel, Pixel):
+        #     raise Exception("Must be type Pixel")
 
         x, y = position
         if x < 0 or x > self.width:
