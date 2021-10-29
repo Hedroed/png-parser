@@ -1,5 +1,6 @@
-from ..color import Color
+from typing import Optional
 
+from ..color import Color
 from ..chunktypes import CHUNK_LENGTH_SIZE
 
 
@@ -9,7 +10,7 @@ class ChunkText:
         self.crc = crc
         try:
             key, text = data.split(b'\x00', 1)
-            self.key = key.decode('utf-8', 'replace')
+            self.key: Optional[str] = key.decode('utf-8', 'replace')
             self.text = text.decode('utf-8', 'replace')
         except ValueError:
             self.key = None
@@ -19,8 +20,8 @@ class ChunkText:
     def data(self):
         if self.key:
             return self.key.encode() + b'\x00' + self.text.encode()
-        else:
-            return self.text.encode()
+
+        return self.text.encode()
 
     def to_bytes(self):
         l = len(self.data).to_bytes(CHUNK_LENGTH_SIZE, 'big')

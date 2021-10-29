@@ -1,7 +1,7 @@
 import struct
 
 from ..color import Color
-
+from ..chunktypes import CHUNK_LENGTH_SIZE
 
 class ChunkPhys:
     def __init__(self, type_: bytes, data: bytes, crc: bytes):

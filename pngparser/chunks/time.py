@@ -16,12 +16,12 @@ class ChunkTime:
     @property
     def data(self):
         return struct.pack('>HBBBBB',
-                             self.datetime.year,
-                             self.datetime.month,
-                             self.datetime.day,
-                             self.datetime.hour,
-                             self.datetime.minute,
-                             self.datetime.second)
+                           self.datetime.year,
+                           self.datetime.month,
+                           self.datetime.day,
+                           self.datetime.hour,
+                           self.datetime.minute,
+                           self.datetime.second)
 
     def to_bytes(self):
         l = len(self.data).to_bytes(CHUNK_LENGTH_SIZE, 'big')

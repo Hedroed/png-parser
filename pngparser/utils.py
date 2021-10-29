@@ -28,9 +28,9 @@ def pixel_type_to_length(color_type: int) -> int:
 
 
 class BitArray(collections.abc.Iterator):
-    def __init__(self, bytes, depth=8):
+    def __init__(self, bytes_, depth=8):
         # print("Create BitArray with %s, %s" % (bytes, depth))
-        self.bytes = bytes
+        self.bytes = bytes_
         self.pos = 0
         self.depth = depth
 
@@ -41,10 +41,10 @@ class BitArray(collections.abc.Iterator):
             self._readbits = self._read16bits
         elif depth == 8:
             self._readbits = self._read8bits
-        elif depth == 4 or depth == 2 or depth == 1:
+        elif depth in (4, 2, 1):
             self._readbits = self._readotherbits
         else:
-            raise ValueError("Depth must be 16, 8, 4, 2, 1 not %s" % deep)
+            raise ValueError(f"Depth must be 16, 8, 4, 2, 1 not {depth}")
 
     def _readbit(self, n=1):
         if self.pos >= len(self.bytes):
@@ -54,10 +54,10 @@ class BitArray(collections.abc.Iterator):
             ret = self.bytes[self.pos: self.pos+n]
             self.pos += n
             return int.from_bytes(ret, byteorder='big')
-        else:
-            ret = self.bytes[self.pos]
-            self.pos += 1
-            return ret
+
+        ret = self.bytes[self.pos]
+        self.pos += 1
+        return ret
 
     def _read16bits(self):
         return self._readbit(2)
@@ -86,5 +86,5 @@ class BitArray(collections.abc.Iterator):
     def __next__(self):
         if self.pos >= len(self.bytes):
             raise StopIteration
-        else:
-            return self.read()
+
+        return self.read()

@@ -1,14 +1,12 @@
-import zlib
-from PIL import Image
-from mmap import ACCESS_READ, mmap
-import os
 import logging
-from typing import List, Optional, Tuple
+import os
+import zlib
+from mmap import ACCESS_READ, mmap
+from typing import Any, List, Optional, Tuple
 
-from .chunktypes import CHUNK_CRC_SIZE, CHUNK_LENGTH_SIZE, CHUNK_TYPE_SIZE, is_text_chunk, TYPE_IHDR
-from .chunks import create_chunk, ChunkRaw
-from .chunktypes import *
-from .color import Color
+from .chunks import ChunkRaw, create_chunk
+from .chunktypes import (CHUNK_CRC_SIZE, CHUNK_LENGTH_SIZE, CHUNK_TYPE_SIZE,
+                         TYPE_IDAT, TYPE_IHDR, TYPE_PLTE, is_text_chunk)
 from .imagedata import ImageData
 
 PNG_MAGIC_NUMBER = b'\x89PNG\r\n\x1a\n'
@@ -18,7 +16,7 @@ PNG_MAGIC_NUMBER_SIZE = len(PNG_MAGIC_NUMBER)
 class PngParser():
     def __init__(self, file):
 
-        if type(file) == str:
+        if isinstance(file, str):
             logging.debug("opening file %s", file)
             self.file = open(file, 'rb')
 
@@ -35,7 +33,7 @@ class PngParser():
         # skip file header
         mm.seek(PNG_MAGIC_NUMBER_SIZE, os.SEEK_SET)
 
-        self.chunks: List[Chunk] = []
+        self.chunks: List[Any] = []
         self.chunks_pos: List[Tuple[int, int]] = []
         self.reader = mm
 
@@ -144,7 +142,8 @@ class PngParser():
 
             for chunk in self.chunks:
                 # update chunk crc
-                chunk.crc = zlib.crc32(chunk.type + chunk.data).to_bytes(CHUNK_CRC_SIZE, 'big')
+                chunk.crc = zlib.crc32(
+                    chunk.type + chunk.data).to_bytes(CHUNK_CRC_SIZE, 'big')
                 f.write(chunk.to_bytes())
 
     def get_by_index(self, idx):

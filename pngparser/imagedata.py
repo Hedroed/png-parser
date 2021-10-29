@@ -1,11 +1,12 @@
-import math
-from typing import List, Optional
 import logging
+import math
+from dataclasses import dataclass
+from typing import List, Optional, Tuple, Union
 
+from .chunks import ChunkIHDR
 # from .image import Image
 # from .pixel import Pixel
 from .utils import BitArray
-from .chunks import ChunkIHDR
 
 _adam7 = ((0, 0, 8, 8),
           (4, 0, 8, 8),
@@ -27,7 +28,7 @@ def apply_filter(header: ChunkIHDR, filter_type: int, scanline: bytes, previous:
     if not previous:
         if filter_type == 2:  # up
             return result
-        elif filter_type == 3:  # average
+        if filter_type == 3:  # average
             previous = [0]*len(scanline)
         elif filter_type == 4:  # "paeth"
             filter_type = 1
@@ -107,14 +108,14 @@ def undo_filter(header: ChunkIHDR, filter_type, scanline, previous=None):
             ai += 1
 
     elif filter_type == 2:  # up
-        for i in range(len(result)):
+        for i, _ in enumerate(result):
             x = scanline[i]
             b = previous[i]
             result[i] = (x + b) & 0xff
 
     elif filter_type == 3:  # average
         ai = -fu
-        for i in range(len(result)):
+        for i, _ in enumerate(result):
             x = scanline[i]
             if ai < 0:
                 a = 0
@@ -126,7 +127,7 @@ def undo_filter(header: ChunkIHDR, filter_type, scanline, previous=None):
 
     elif filter_type == 4:  # paeth
         ai = -fu
-        for i in range(len(result)):
+        for i, _ in enumerate(result):
             x = scanline[i]
             if ai < 0:
                 a = c = 0
@@ -149,27 +150,27 @@ def undo_filter(header: ChunkIHDR, filter_type, scanline, previous=None):
 
     return result
 
-    def _setpixelfilter(self, x, y, image):
-        leftPixel = self._getpixelSafe(image, x - 1, y)
-        upPixel = self._getpixelSafe(image, x, y - 1)
-        cornerPixel = self._getpixelSafe(image, x - 1, y - 1)
-        pixel = self._getpixelSafe(image, x, y)
+    # def _setpixelfilter(self, x, y, image):
+    #     leftPixel = self._getpixelSafe(image, x - 1, y)
+    #     upPixel = self._getpixelSafe(image, x, y - 1)
+    #     cornerPixel = self._getpixelSafe(image, x - 1, y - 1)
+    #     pixel = self._getpixelSafe(image, x, y)
 
-        ret = pixel
-        if self.filter == 1:
-            ret = pixel - leftPixel
+    #     ret = pixel
+    #     if self.filter == 1:
+    #         ret = pixel - leftPixel
 
-        elif self.filter == 2:
-            ret = pixel - upPixel
+    #     elif self.filter == 2:
+    #         ret = pixel - upPixel
 
-        elif self.filter == 3:
-            ret = pixel.subMean(leftPixel, upPixel)
+    #     elif self.filter == 3:
+    #         ret = pixel.subMean(leftPixel, upPixel)
 
-        elif self.filter == 4:
-            bestPixel = Pixel.peath(leftPixel, upPixel, cornerPixel)
-            ret = pixel - bestPixel
+    #     elif self.filter == 4:
+    #         bestPixel = Pixel.peath(leftPixel, upPixel, cornerPixel)
+    #         ret = pixel - bestPixel
 
-        return ret
+    #     return ret
 
 
 def deinterlace(header: ChunkIHDR, raw):
@@ -177,8 +178,6 @@ def deinterlace(header: ChunkIHDR, raw):
     Read raw pixel data, undo filters, deinterlace, and flatten.
     Return in flat row flat pixel format.
     """
-
-    vpr = header.width * header.pixel_len
 
     source_offset = 0
 
@@ -193,7 +192,7 @@ def deinterlace(header: ChunkIHDR, raw):
         # Row size in bytes for this pass.
         row_size = int(math.ceil(header.pixel_len * ppr))
 
-        for y in range(ystart, header.height, ystep):
+        for _ in range(ystart, header.height, ystep):
             try:
                 filter_type = raw[source_offset]
             except IndexError:
@@ -209,11 +208,10 @@ def deinterlace(header: ChunkIHDR, raw):
             yield Scanline(filter_type, recon)
 
 
-class Scanline():
-    def __init__(self, filter_: int, data: bytes):
-        self.filter = filter_
-        self.data = data
-
+@dataclass
+class Scanline:
+    filter: int
+    data: bytes
 
 class ImageData():
     def __init__(self, header: ChunkIHDR, data: bytes, palette=None):
@@ -258,6 +256,11 @@ class ImageData():
         if self._scanlines is None:
             logging.debug("loading scanlines")
             self._load_scanlines()
+
+        # must never happent
+        if self._scanlines is None:
+            return []
+
         return self._scanlines
 
     @scanlines.setter
@@ -285,8 +288,9 @@ class ImageData():
         elif color_type == 6:  # RGB + Alpha
             pil_pixel_type = 'RGBA'  # 4
 
-        pil_img = PilImage.new(pil_pixel_type, (self.header.width + 1, len(self.scanlines)))
-        data = []
+        pil_img = PilImage.new(
+            pil_pixel_type, (self.header.width + 1, len(self.scanlines)))
+        data: List[Union[Tuple[int, int, int, int], int]] = []
         for sc in self.scanlines:
             filter_pixel = (sc.filter, sc.filter, sc.filter, 1)
             if pixel_len == 1:
@@ -313,9 +317,10 @@ class ImageData():
         recon = None
         for scanline in self.scanlines:
             try:
-                raw = apply_filter(self.header, scanline.filter, scanline.data, recon)
+                raw = apply_filter(
+                    self.header, scanline.filter, scanline.data, recon)
             except IndexError:
-                logging.exception(f"error on scanline {scanline.data!r}")
+                logging.exception("error on scanline %r", scanline.data)
                 raise
             recon = scanline.data
             data.append(scanline.filter)
@@ -325,7 +330,6 @@ class ImageData():
     def _get_pixels(self, row):
         pixels = []
         pxLen = self.header.pixel_len
-        color_type = self.header.color_type
 
         if self.palette:
             pixels = [self.palette[i] for i in row]

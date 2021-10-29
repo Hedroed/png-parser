@@ -1,11 +1,13 @@
+from typing import List
+
 class CRC():
-    CRC_TABLE = None
+    CRC_TABLE: List[int] = []
 
     @staticmethod
     def createCRCTable():
         CRC.CRC_TABLE = []
         for c in range(256):
-            for k in range(8):
+            for _ in range(8):
                 if (c & 1) == 1:
                     c = 0xedb88320 ^ (c >> 1)
                 else:
@@ -19,11 +21,11 @@ class CRC():
             c = CRC.CRC_TABLE[(c ^ val) & 0xff] ^ (c >> 8)
         return c ^ 0xffffffff
 
-    def __init__(self, CRC, data=None):
-        if type(CRC) == bytes:
-            CRC = int.from_bytes(CRC, byteorder='big')
+    def __init__(self, crc, data=None):
+        if isinstance(crc, bytes):
+            crc = int.from_bytes(crc, byteorder='big')
 
-        self.crc = CRC
+        self.crc = crc
         self.valid = True
         if data:
             self.checkCRC(data)
@@ -38,4 +40,4 @@ class CRC():
         self.good = crc
 
     def __repr__(self):
-        return "%x : %s" % (self.crc, "OK" if self.valid else "Incorrect must be %x" % self.good)
+        return f'{self.crc:x} : {"OK" if self.valid else f"Incorrect must be {self.good:x}"}'

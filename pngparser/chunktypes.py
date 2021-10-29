@@ -1,5 +1,4 @@
-from enum import Enum, auto
-from typing import Union, List
+from typing import List
 
 CHUNK_LENGTH_SIZE = 4
 CHUNK_TYPE_SIZE = 4
@@ -32,9 +31,10 @@ TYPE_zTXt = b'zTXt'
 def get_all() -> List[bytes]:
     return [v for k, v in locals().items() if k.startswith('TYPE_')]
 
+
 def contains(chunk_type: bytes) -> bool:
     return chunk_type in get_all()
 
+
 def is_text_chunk(chunk_type: bytes) -> bool:
     return chunk_type in (TYPE_iTXt, TYPE_tEXt, TYPE_zTXt)
-

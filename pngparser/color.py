@@ -13,4 +13,4 @@ class Color(Enum):
     unknown = '\033[31m'
 
     def __str__(self):
-        return self.value
+        return str(self.value)
