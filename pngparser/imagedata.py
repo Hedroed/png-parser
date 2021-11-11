@@ -17,7 +17,7 @@ _adam7 = ((0, 0, 8, 8),
           (0, 1, 1, 2))
 
 
-def apply_filter(header: ChunkIHDR, filter_type: int, scanline: bytes, previous: bytes = None) -> bytes:
+def apply_filter(header: ChunkIHDR, filter_type: int, scanline: bytes, previous: Optional[bytes] = None) -> bytes:
     result = bytearray(scanline)
 
     if filter_type == 0:
@@ -84,11 +84,10 @@ def apply_filter(header: ChunkIHDR, filter_type: int, scanline: bytes, previous:
             x = (x - pr) & 0xff
             result[i] = x
             ai += 1
-
     return result
 
 
-def undo_filter(header: ChunkIHDR, filter_type, scanline, previous=None):
+def undo_filter(header: ChunkIHDR, filter_type: int, scanline: bytes, previous: Optional[bytes] = None) -> bytearray:
     result = bytearray(scanline)
 
     if filter_type == 0:
@@ -147,7 +146,6 @@ def undo_filter(header: ChunkIHDR, filter_type, scanline, previous=None):
                 pr = c
             result[i] = (x + pr) & 0xff
             ai += 1
-
     return result
 
     # def _setpixelfilter(self, x, y, image):
@@ -196,7 +194,7 @@ def deinterlace(header: ChunkIHDR, raw):
             try:
                 filter_type = raw[source_offset]
             except IndexError:
-                logging.error("missing scanlines for interlaced image")
+                logging.error('missing scanlines for interlaced image')
                 return
 
             source_offset += 1
@@ -213,8 +211,9 @@ class Scanline:
     filter: int
     data: bytes
 
-class ImageData():
-    def __init__(self, header: ChunkIHDR, data: bytes, palette=None):
+
+class ImageData:
+    def __init__(self, header: ChunkIHDR, data: bytes, palette=None) -> None:
         self.header = header
         self.data = data
 
@@ -228,11 +227,11 @@ class ImageData():
     def _load_scanlines(self) -> None:
         if self.header.interlace_method == 1:
             self._scanlines = list(deinterlace(self.header, self.data))
-            logging.debug("%d interlaced scanlines loaded", len(self._scanlines))
+            logging.debug(f'{len(self._scanlines)} interlaced scanlines loaded')
         else:
             # line_width = pixel_count_in_line * bytes_count_by_pixel + the_filter_byte
             line_width = self.header.width * self.header.pixel_len
-            logging.debug("%d bytes per scanline", line_width)
+            logging.debug(f'{line_width} bytes per scanline')
 
             recon = None
             self._scanlines = []
@@ -249,18 +248,17 @@ class ImageData():
                 scanline = Scanline(filter_type, recon)
                 self._scanlines.append(scanline)
 
-            logging.debug("%d scanlines loaded", len(self._scanlines))
+            logging.debug(f'{len(self._scanlines)} scanlines loaded')
 
     @property
     def scanlines(self) -> List[Scanline]:
         if self._scanlines is None:
-            logging.debug("loading scanlines")
+            logging.debug('loading scanlines')
             self._load_scanlines()
 
-        # must never happent
+        # must never happen
         if self._scanlines is None:
             return []
-
         return self._scanlines
 
     @scanlines.setter
@@ -307,7 +305,7 @@ class ImageData():
                     raw_sc += [(0, 0, 0, 1)]*(self.header.width-len(raw_sc))
                 data += raw_sc
 
-        logging.info("display image of size %s", pil_img.size)
+        logging.info(f'display image of size {pil_img.size}')
 
         pil_img.putdata(data)
         pil_img.show()
@@ -320,7 +318,7 @@ class ImageData():
                 raw = apply_filter(
                     self.header, scanline.filter, scanline.data, recon)
             except IndexError:
-                logging.exception("error on scanline %r", scanline.data)
+                logging.exception(f'error on scanline {scanline.data}')
                 raise
             recon = scanline.data
             data.append(scanline.filter)
@@ -329,7 +327,7 @@ class ImageData():
 
     def _get_pixels(self, row):
         pixels = []
-        pxLen = self.header.pixel_len
+        px_len = self.header.pixel_len
 
         if self.palette:
             pixels = [self.palette[i] for i in row]
@@ -341,13 +339,12 @@ class ImageData():
                     # shrink value between 0 and 255
                     val = val * (2**bit_depth - 1)
                 px.append(val)
-                if len(px) == pxLen:
+                if len(px) == px_len:
                     pixels.append(tuple(px))
                     px = []
-
         return pixels
 
-    def _savePixels(self, row_data):
+    def _save_pixels(self, row_data) -> bytes:
         # bit_depth
         row_ret = b''
         # px_ok = 0
@@ -367,5 +364,4 @@ class ImageData():
         else:
             for px in row_data.pixels:
                 row_ret += px.to_bytes()
-
         return row_ret

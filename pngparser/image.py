@@ -3,8 +3,8 @@ from PIL import Image as PilImage
 from .pixel import Pixel
 
 
-class Image():
-    def __init__(self, pixel_type, width, height):
+class Image:
+    def __init__(self, pixel_type, width, height) -> None:
         self.width = width
         self.height = height
         self.pixel_type = pixel_type
@@ -13,13 +13,13 @@ class Image():
 
     def putpixel(self, position, pixel: Pixel):
         # if not isinstance(pixel, Pixel):
-        #     raise Exception("Must be type Pixel")
+        #     raise Exception('Must be type Pixel')
 
         x, y = position
         if x < 0 or x > self.width:
-            raise IndexError("x outside image")
+            raise IndexError('x outside image')
         if y < 0 or y > self.height:
-            raise IndexError("y outside image")
+            raise IndexError('y outside image')
 
         pos = x + y * self.width
         self.data[pos] = pixel
@@ -27,16 +27,15 @@ class Image():
     def getpixel(self, position):
         x, y = position
         if x < 0 or x > self.width:
-            raise IndexError("x outside image")
+            raise IndexError('x outside image')
         if y < 0 or y > self.height:
-            raise IndexError("y outside image")
+            raise IndexError('y outside image')
 
         pos = x + y * self.width
         return self.data[pos]
 
-    def show(self):
-
-        pil_pixel_type = "RGB"
+    def show(self) -> None:
+        pil_pixel_type = 'RGB'
         if self.pixel_type == 0:  # Greyscale
             pil_pixel_type = 'L'  # 1
         elif self.pixel_type == 2:  # RGB
