@@ -16,7 +16,7 @@ PNG_MAGIC_NUMBER_SIZE = len(PNG_MAGIC_NUMBER)
 class PngParser:
     def __init__(self, file):
         if isinstance(file, str):
-            logging.debug(f'opening file {file}')
+            logging.debug('opening file %s', file)
             self.file = open(file, 'rb')
         else:
             logging.debug('read data')
@@ -44,7 +44,7 @@ class PngParser:
 
     def __exit__(self, type_, value, traceback) -> None:
         if type_:
-            logging.error(f'png error {type_} : {value}\n{traceback}')
+            logging.error('png error %s : %s\n%s', type_, value, traceback)
 
         self.close()
 
@@ -71,7 +71,7 @@ class PngParser:
             position = self.reader.tell()
 
             current_chunk = create_chunk(chunk_type, data, crc)
-            logging.debug(f'found chunk {current_chunk.type}')
+            logging.debug('found chunk %s', current_chunk.type)
             self.chunks.append(current_chunk)
 
     def show_image(self) -> None:
@@ -98,7 +98,7 @@ class PngParser:
             header = header_chunk
 
             data_length = len(data)
-            logging.debug(f'{data_length} decompressed byte data loaded')
+            logging.debug('%d decompressed byte data loaded', data_length)
 
             # If palette
             palette = None
@@ -129,7 +129,7 @@ class PngParser:
 
         self.chunks = new_chunks
         for c in self.chunks:
-            logging.debug(f'new chunks: {c.type}')
+            logging.debug('new chunks: %s', c.type)
 
     def save_file(self, path) -> None:
         with open(path, 'wb') as f:

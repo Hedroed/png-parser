@@ -227,11 +227,11 @@ class ImageData:
     def _load_scanlines(self) -> None:
         if self.header.interlace_method == 1:
             self._scanlines = list(deinterlace(self.header, self.data))
-            logging.debug(f'{len(self._scanlines)} interlaced scanlines loaded')
+            logging.debug('%d interlaced scanlines loaded', len(self._scanlines))
         else:
             # line_width = pixel_count_in_line * bytes_count_by_pixel + the_filter_byte
             line_width = self.header.width * self.header.pixel_len
-            logging.debug(f'{line_width} bytes per scanline')
+            logging.debug('%d bytes per scanline', line_width)
 
             recon = None
             self._scanlines = []
@@ -248,7 +248,7 @@ class ImageData:
                 scanline = Scanline(filter_type, recon)
                 self._scanlines.append(scanline)
 
-            logging.debug(f'{len(self._scanlines)} scanlines loaded')
+            logging.debug('%d scanlines loaded', len(self._scanlines))
 
     @property
     def scanlines(self) -> List[Scanline]:
@@ -305,7 +305,7 @@ class ImageData:
                     raw_sc += [(0, 0, 0, 1)]*(self.header.width-len(raw_sc))
                 data += raw_sc
 
-        logging.info(f'display image of size {pil_img.size}')
+        logging.info('display image of size %s', pil_img.size)
 
         pil_img.putdata(data)
         pil_img.show()
@@ -318,7 +318,7 @@ class ImageData:
                 raw = apply_filter(
                     self.header, scanline.filter, scanline.data, recon)
             except IndexError:
-                logging.exception(f'error on scanline {scanline.data}')
+                logging.exception('error on scanline %r', scanline.data)
                 raise
             recon = scanline.data
             data.append(scanline.filter)
