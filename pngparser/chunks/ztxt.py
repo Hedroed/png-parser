@@ -5,8 +5,7 @@ from ..chunktypes import CHUNK_LENGTH_SIZE
 
 
 class ChunkZtxt:
-
-    def __init__(self, type_: bytes, data: bytes, crc: bytes):
+    def __init__(self, type_: bytes, data: bytes, crc: bytes) -> None:
         self.type = type_
         self.crc = crc
 
@@ -16,22 +15,21 @@ class ChunkZtxt:
         self.method = rest[0]
         self.text = zlib.decompress(rest[1:]).decode('utf-8', 'replace')
 
-    def to_bytes(self):
+    def to_bytes(self) -> bytes:
         data = bytearray()
         data += self.key.encode()
         data.append(0)
         data.append(self.method)
         data += zlib.compress(self.text.encode())
 
-        l = len(data).to_bytes(CHUNK_LENGTH_SIZE, 'big')
-        return l + self.type + data + self.crc
+        length = len(data).to_bytes(CHUNK_LENGTH_SIZE, 'big')
+        return length + self.type + data + self.crc
 
-    def __repr__(self):
-        return f"ChunkZTxt({self.text})"
+    def __repr__(self) -> str:
+        return f'ChunkZTxt({self.text})'
 
-    def __str__(self):
-        ret = f"{Color.text}Key : {Color.data}{self.key}\n"
-        ret += f"{Color.text}Text : {Color.data}{self.text}\n"
-        ret += f"{Color.text}Method : {Color.data}{self.method}\n"
-
-        return f"{ret}{Color.r}"
+    def __str__(self) -> str:
+        ret = '{0.text}Key : {0.data}{1.key}\n' \
+              '{0.text}Text : {0.data}{1.text}\n' \
+              '{0.text}Method : {0.data}{1.method}\n'.format(Color, self)
+        return f'{ret}{Color.r}'

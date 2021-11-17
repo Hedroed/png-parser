@@ -13,15 +13,13 @@ PNG_MAGIC_NUMBER = b'\x89PNG\r\n\x1a\n'
 PNG_MAGIC_NUMBER_SIZE = len(PNG_MAGIC_NUMBER)
 
 
-class PngParser():
+class PngParser:
     def __init__(self, file):
-
         if isinstance(file, str):
-            logging.debug("opening file %s", file)
+            logging.debug('opening file %s', file)
             self.file = open(file, 'rb')
-
         else:
-            logging.debug("read data")
+            logging.debug('read data')
             self.file = file
 
         # check file header
@@ -37,24 +35,24 @@ class PngParser():
         self.chunks_pos: List[Tuple[int, int]] = []
         self.reader = mm
 
-        self._readChunk()
+        self._read_chunk()
         if all(c.type != TYPE_IHDR for c in self.chunks):
             logging.warning('found no header chunk')
 
     def __enter__(self):
         return self
 
-    def __exit__(self, type_, value, traceback):
+    def __exit__(self, type_, value, traceback) -> None:
         if type_:
-            logging.error("png error %s : %s\n%s", type_, value, traceback)
+            logging.error('png error %s : %s\n%s', type_, value, traceback)
 
         self.close()
 
-    def close(self):
-        logging.debug("closing file")
+    def close(self) -> None:
+        logging.debug('closing file')
         self.file.close()
 
-    def _readChunk(self):
+    def _read_chunk(self) -> None:
         position = 0
         while True:
             # read data length
@@ -73,11 +71,10 @@ class PngParser():
             position = self.reader.tell()
 
             current_chunk = create_chunk(chunk_type, data, crc)
-            logging.debug("found chunk %s", current_chunk.type)
+            logging.debug('found chunk %s', current_chunk.type)
             self.chunks.append(current_chunk)
 
-    def show_image(self):
-
+    def show_image(self) -> None:
         img = self.get_image_data()
         img.show()
 
@@ -101,19 +98,18 @@ class PngParser():
             header = header_chunk
 
             data_length = len(data)
-            logging.debug("%d decompressed byte data loaded", data_length)
+            logging.debug('%d decompressed byte data loaded', data_length)
 
             # If palette
             palette = None
             if header.use_palette():
-                logging.debug("use palette")
+                logging.debug('use palette')
                 palette = next(c for c in self.chunks if c.type == TYPE_PLTE)
 
             img = ImageData(header, data, palette=palette)
-
             return img
 
-    def set_image_data(self, img: ImageData):
+    def set_image_data(self, img: ImageData) -> None:
         data = img.to_bytes()
 
         compressed_data = zlib.compress(data)
@@ -133,10 +129,9 @@ class PngParser():
 
         self.chunks = new_chunks
         for c in self.chunks:
-            logging.debug("new chunks: %s", c.type)
+            logging.debug('new chunks: %s', c.type)
 
-    def save_file(self, path):
-
+    def save_file(self, path) -> None:
         with open(path, 'wb') as f:
             f.write(PNG_MAGIC_NUMBER)
 
@@ -146,23 +141,22 @@ class PngParser():
                     chunk.type + chunk.data).to_bytes(CHUNK_CRC_SIZE, 'big')
                 f.write(chunk.to_bytes())
 
-    def get_by_index(self, idx):
+    def get_by_index(self, idx) -> list:
         if idx >= len(self.chunks):
             raise Exception(f'index {idx} too big')
-
         return self.chunks[idx]
 
-    def get_by_type(self, typeChunk):
-        return [item for item in self.chunks if item.type == typeChunk]
+    def get_by_type(self, type_chunk) -> list:
+        return [item for item in self.chunks if item.type == type_chunk]
 
-    def get_all(self):
+    def get_all(self) -> list:
         return self.chunks
 
-    def get_text_chunks(self):
+    def get_text_chunks(self) -> list:
         return [i for i in self.chunks if is_text_chunk(i.type)]
 
     def get_pos(self, chunk: ChunkRaw) -> Tuple[int, int]:
         try:
             return self.chunks_pos[self.chunks.index(chunk)]
         except ValueError:
-            return (0, 0)
+            return 0, 0

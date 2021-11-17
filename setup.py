@@ -9,7 +9,7 @@ ver_path = convert_path('pngparser/version.py')
 with open(ver_path) as ver_file:
     exec(ver_file.read(), main_ns)
 
-dependencies = []
+dependencies = ['Pillow']
 
 setup(
     name='png-parser',

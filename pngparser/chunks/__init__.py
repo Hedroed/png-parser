@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from ..chunktypes import (CHUNK_LENGTH_SIZE, TYPE_IDAT, TYPE_IEND, TYPE_IHDR,
                           TYPE_PLTE, TYPE_iTXt, TYPE_pHYs, TYPE_tEXt,
@@ -14,17 +14,17 @@ from .ztxt import ChunkZtxt
 
 
 class ChunkRaw:
-    def __init__(self, type_: bytes, data: bytes, crc: bytes = None):
+    def __init__(self, type_: bytes, data: bytes, crc: Optional[bytes] = None) -> None:
         self.type = type_
         self.data = data
         self.crc = crc or b'\x00\x00\x00\x00'
 
-    def to_bytes(self):
-        l = len(self.data).to_bytes(CHUNK_LENGTH_SIZE, 'big')
-        return l + self.type + self.data + self.crc
+    def to_bytes(self) -> bytes:
+        length = len(self.data).to_bytes(CHUNK_LENGTH_SIZE, 'big')
+        return length + self.type + self.data + self.crc
 
-    def __str__(self):
-        return f"Chunk({Color.text}{self.data!r}{Color.r})"
+    def __str__(self) -> str:
+        return f'Chunk({Color.text}{self.data!r}{Color.r})'
 
 
 FACTORY = {
@@ -43,5 +43,4 @@ FACTORY = {
 def create_chunk(chunk_type: bytes, data: bytes, crc: bytes) -> Any:
     if chunk_type in FACTORY:
         return FACTORY[chunk_type](chunk_type, data, crc)
-
     return ChunkRaw(chunk_type, data, crc)

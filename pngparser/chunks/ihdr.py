@@ -20,8 +20,7 @@ COLOR_TYPE_RGBA = 6
 
 
 class ChunkIHDR:
-
-    def __init__(self, type_: bytes, data: bytes, crc: bytes):
+    def __init__(self, type_: bytes, data: bytes, crc: bytes) -> None:
         self.type = type_
         self.crc = crc
 
@@ -35,19 +34,20 @@ class ChunkIHDR:
         self.filter_method = values[5]
         self.interlace_method = values[6]
 
-        self.checkColorType()
+        self.color_type_display = ''  # Initialize variable
+        self.check_color_type()
 
-    def checkColorType(self):
-        c = str(self.color_type)
-        if c in COLOR_TYPE:
-            color = COLOR_TYPE[c]
+    def check_color_type(self) -> None:
+        color_type = str(self.color_type)
+        if color_type in COLOR_TYPE:
+            color = COLOR_TYPE[color_type]
 
             if self.bit_depth not in color[0]:
                 print(f'{Color.unknown}Bit depth no allowed in color type{Color.r}')
 
             self.color_type_display = f'Code = {self.color_type} ; Depth Allow = {color[0]} ; {color[1]}'
 
-    def use_palette(self):
+    def use_palette(self) -> bool:
         return self.color_type == COLOR_TYPE_PALETTE
 
     @property
@@ -60,7 +60,7 @@ class ChunkIHDR:
         return pixel_type_to_length(self.color_type)
 
     @property
-    def data(self):
+    def data(self) -> bytes:
         return struct.pack('>IIBBBBB',
                            self.width,
                            self.height,
@@ -70,18 +70,16 @@ class ChunkIHDR:
                            self.filter_method,
                            self.interlace_method)
 
-    def to_bytes(self):
-        l = len(self.data).to_bytes(CHUNK_LENGTH_SIZE, 'big')
-        return l + self.type + self.data + self.crc
+    def to_bytes(self) -> bytes:
+        length = len(self.data).to_bytes(CHUNK_LENGTH_SIZE, 'big')
+        return length + self.type + self.data + self.crc
 
-    def __str__(self):
-        ret = ""
-        ret += f"{Color.text} - Width : {Color.id}{self.width}{Color.r}\n"
-        ret += f"{Color.text} - Height : {Color.id}{self.height}{Color.r}\n"
-        ret += f"{Color.text} - Bit depth : {Color.id}{self.bit_depth}{Color.r}\n"
-        ret += f"{Color.text} - Color type : {Color.id}{self.color_type_display}{Color.r}\n"
-        ret += f"{Color.text} - Compression method : {Color.id}{self.compression_method}{Color.r}\n"
-        ret += f"{Color.text} - Filter method : {Color.id}{self.filter_method}{Color.r}\n"
-        ret += f"{Color.text} - Interlace method : {Color.id}{self.interlace_method}{Color.r}\n"
-
+    def __str__(self) -> str:
+        ret = '{0.text} - Width : {0.id}{1.width}{0.r}\n' \
+              '{0.text} - Height : {0.id}{1.height}{0.r}\n' \
+              '{0.text} - Bit depth : {0.id}{1.bit_depth}{0.r}\n' \
+              '{0.text} - Color type : {0.id}{1.color_type_display}{0.r}\n' \
+              '{0.text} - Compression method : {0.id}{1.compression_method}{0.r}\n' \
+              '{0.text} - Filter method : {0.id}{1.filter_method}{0.r}\n' \
+              '{0.text} - Interlace method : {0.id}{1.interlace_method}{0.r}\n'.format(Color, self)
         return ret
