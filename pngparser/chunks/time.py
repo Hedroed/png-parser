@@ -28,4 +28,5 @@ class ChunkTime:
         return length + self.type + self.data + self.crc
 
     def __str__(self) -> str:
-        return '{0.text}Date: {1}{0.r}'.format(Color, self.datetime.strftime('%c'))
+        date = self.datetime.strftime('%c')
+        return f'{Color.text}Date: {date}{Color.r}'

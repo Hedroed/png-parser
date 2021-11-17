@@ -31,4 +31,4 @@ class ChunkText:
         return f'ChunkDataText({self.key}: {self.text})'
 
     def __str__(self) -> str:
-        return '{0.text}{1.key}: {1.text}{0.r}'.format(Color, self)
+        return f'{Color.text}{self.key}: {self.text}{Color.r}'

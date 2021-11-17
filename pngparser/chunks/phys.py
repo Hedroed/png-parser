@@ -27,5 +27,5 @@ class ChunkPhys:
 
     def __str__(self) -> str:
         unit = 'meter' if self.unit == 1 else 'unknown'
-        return '{0.text}Physical: {1.px_per_unit_x} pixels per {2} for X, ' \
-               '{1.px_per_unit_y} pixels per {2} for Y{0.r}'.format(Color, self, unit)
+        return f'{Color.text}Physical: {self.px_per_unit_x} pixels per {unit} for X, ' \
+               f'{self.px_per_unit_y} pixels per {unit} for Y{Color.r}'

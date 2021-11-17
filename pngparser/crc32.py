@@ -42,4 +42,5 @@ class CRC:
         self.good = crc
 
     def __repr__(self) -> str:
-        return '{0} : {1}'.format(f'{self.crc:x}', 'OK' if self.valid else f'Incorrect must be {self.good:x}')
+        valid = 'OK' if self.valid else f'Incorrect must be {self.good:x}'
+        return f'{self.crc:x} : {valid}'
