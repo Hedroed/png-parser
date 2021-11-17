@@ -15,16 +15,16 @@ def monitor_results(func):
 def pixel_type_to_length(color_type: int) -> int:
     if color_type == 0:  # Greyscale
         return 1
-    elif color_type == 2:  # RGB
+    if color_type == 2:  # RGB
         return 3
-    elif color_type == 3:  # Palette
+    if color_type == 3:  # Palette
         return 1
-    elif color_type == 4:  # Greyscale + alpha
+    if color_type == 4:  # Greyscale + alpha
         return 2
-    elif color_type == 6:  # RGB + Alpha
+    if color_type == 6:  # RGB + Alpha
         return 4
-    else:  # Other
-        raise ValueError(f'Invalid color type {color_type}')
+
+    raise ValueError(f'Invalid color type {color_type}')
 
 
 class BitArray(collections.abc.Iterator):
