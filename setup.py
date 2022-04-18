@@ -25,6 +25,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
+    python_requires=">=3.6",
     entry_points={
         'console_scripts': [
             'png-parser = pngparser.cli:main',

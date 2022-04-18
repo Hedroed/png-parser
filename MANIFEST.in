@@ -1,0 +1,6 @@
+include *.md
+include pylintrc
+recursive-include doc *.html
+recursive-include example *.png
+recursive-include example *.py
+recursive-include tests *.py
