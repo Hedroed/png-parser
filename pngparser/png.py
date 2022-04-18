@@ -1,6 +1,7 @@
 import logging
 import os
 import zlib
+import io
 from mmap import ACCESS_READ, mmap
 from typing import Any, List, Optional, Tuple
 
@@ -26,14 +27,18 @@ class PngParser:
         if self.file.read(PNG_MAGIC_NUMBER_SIZE) != PNG_MAGIC_NUMBER:
             raise Exception(f'"{self.file.name}" file is not a PNG !')
 
-        # load the picture to memory
-        mm = mmap(self.file.fileno(), 0, access=ACCESS_READ)
+        try:
+            # optimized load the picture to memory
+            self.reader = mmap(self.file.fileno(), 0, access=ACCESS_READ)
+        except io.UnsupportedOperation:
+            logging.debug('can\'t use mmap fallback to standard reader')
+            self.reader = self.file
+
         # skip file header
-        mm.seek(PNG_MAGIC_NUMBER_SIZE, os.SEEK_SET)
+        self.reader.seek(PNG_MAGIC_NUMBER_SIZE, os.SEEK_SET)
 
         self.chunks: List[Any] = []
         self.chunks_pos: List[Tuple[int, int]] = []
-        self.reader = mm
 
         self._read_chunk()
         if all(c.type != TYPE_IHDR for c in self.chunks):
