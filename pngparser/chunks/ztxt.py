@@ -14,6 +14,7 @@ class ChunkZtxt:
         self.key = key.decode('utf-8')
         self.method = rest[0]
         self.text = zlib.decompress(rest[1:]).decode('utf-8', 'replace')
+        self.data = self.text
 
     def to_bytes(self) -> bytes:
         data = bytearray()
